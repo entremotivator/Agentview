@@ -2,6 +2,7 @@ import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 from graphviz import Digraph
+import streamlit.components.v1 as components
 
 # Function to create a NetworkX graph
 def create_networkx_graph():
@@ -93,7 +94,9 @@ if vis_type == "NetworkX Graph":
     
     # Show the graph in fullscreen
     st.pyplot(plt)
-    st.html(fullscreen_button, height=100)
+    
+    # Use components.html() for fullscreen button
+    components.html(fullscreen_button, height=100)
 
 elif vis_type == "Graphviz Diagram":
     st.subheader("Graphviz Hierarchical Diagram")
@@ -101,7 +104,7 @@ elif vis_type == "Graphviz Diagram":
     st.graphviz_chart(diagram.source)
     
     # Show the diagram in fullscreen
-    st.html(fullscreen_button, height=100)
+    components.html(fullscreen_button, height=100)
 
 # Customization Features
 st.sidebar.header("Customize Your Team Structure")
