@@ -1,73 +1,63 @@
 import streamlit as st
 from graphviz import Digraph
 
-def create_fullscreen_diagram():
-    # Initialize the diagram with larger dimensions
-    diagram = Digraph("Super Agent Team", format="png")
-    diagram.attr(rankdir="LR", size="25,15", dpi="200", style="filled", bgcolor="white")
+def create_long_pit_diagram():
+    # Initialize the pit diagram
+    diagram = Digraph("Super Agent Team", format="svg")
+    diagram.attr(rankdir="TB", size="15,30", dpi="200", style="filled", bgcolor="white")
 
-    # Add the main header
+    # Add the main node
     diagram.node("Super Agent Team", "Super Agent Team", shape="rectangle", style="filled", fillcolor="deepskyblue", fontcolor="white")
 
-    # Add top-level managers
-    managers = {
-        "Operation Manager": "Execution\nCoordination\nCommunication",
-        "Finance Manager": "Budgeting\nAnalysis\nFinancial Reports",
-        "Support Manager": "Customer Support\nTroubleshooting\nCommunication"
-    }
-
-    for manager, details in managers.items():
-        diagram.node(manager, f"{manager}\n\n{details}", shape="rectangle", style="filled", fillcolor="lightgrey", fontcolor="black")
-        diagram.edge("Super Agent Team", manager)
-
-    # Add sub-agents for each manager
-    sub_agents = {
-        "Operation Manager": [
-            {"name": "Task Executor", "tasks": ["Daily operations", "Task delegation"]},
-            {"name": "Data Analyst", "tasks": ["Analyze metrics", "Performance reports"]},
-            {"name": "Schedule Manager", "tasks": ["Manage timelines", "Ensure task completion"]}
+    # Add tiers and relationships
+    tiers = {
+        "Tier 1": ["Operation Manager", "Finance Manager", "Support Manager"],
+        "Tier 2": [
+            "Task Executor", "Data Analyst", "Schedule Manager",
+            "Budget Analyst", "Account Manager", "Tax Consultant",
+            "Customer Liaison", "Help Desk Agent", "Feedback Specialist"
         ],
-        "Finance Manager": [
-            {"name": "Budget Analyst", "tasks": ["Monitor spending", "Financial forecasts"]},
-            {"name": "Account Manager", "tasks": ["Track expenses", "Invoice management"]},
-            {"name": "Tax Consultant", "tasks": ["Tax compliance", "Optimize deductions"]}
-        ],
-        "Support Manager": [
-            {"name": "Customer Liaison", "tasks": ["Resolve issues", "Provide updates"]},
-            {"name": "Help Desk Agent", "tasks": ["Support tickets", "Technical escalations"]},
-            {"name": "Feedback Specialist", "tasks": ["Collect feedback", "Implement improvements"]}
+        "Tier 3": [
+            "AI Agent 1", "AI Agent 2", "AI Agent 3",
+            "AI Agent 4", "AI Agent 5", "AI Agent 6", "AI Agent 7"
         ]
     }
 
-    for manager, agents in sub_agents.items():
-        for agent in agents:
-            task_details = "\n".join(agent["tasks"])
-            diagram.node(agent["name"], f"{agent['name']}\n\n{task_details}", shape="ellipse", style="filled", fillcolor="lightyellow", fontcolor="black")
-            diagram.edge(manager, agent["name"])
-
-    # Add AI agents
-    ai_agents = [
-        {"name": "AI Agent 1", "description": "Handles NLP tasks, sentiment analysis, and text summarization."},
-        {"name": "AI Agent 2", "description": "Manages predictive analytics and decision-making algorithms."},
-        {"name": "AI Agent 3", "description": "Specializes in computer vision and image processing tasks."},
-        {"name": "AI Agent 4", "description": "Provides chatbot functionality for customer interaction."},
-        {"name": "AI Agent 5", "description": "Automates data entry and processing tasks."},
-        {"name": "AI Agent 6", "description": "Optimizes marketing campaigns and audience targeting."},
-        {"name": "AI Agent 7", "description": "Generates reports on team and project performance."}
-    ]
-
-    for ai_agent in ai_agents:
-        diagram.node(ai_agent["name"], f"{ai_agent['name']}\n\n{ai_agent['description']}", shape="parallelogram", style="filled", fillcolor="lightgreen", fontcolor="black")
-        diagram.edge("Super Agent Team", ai_agent["name"])
+    # Add tier nodes
+    for tier, nodes in tiers.items():
+        for node in nodes:
+            if tier == "Tier 1":
+                fillcolor = "lightgrey"
+            elif tier == "Tier 2":
+                fillcolor = "lightyellow"
+            else:
+                fillcolor = "lightgreen"
+            diagram.node(node, node, shape="ellipse", style="filled", fillcolor=fillcolor, fontcolor="black")
+            if tier == "Tier 1":
+                diagram.edge("Super Agent Team", node)
+            elif tier == "Tier 2":
+                parent = "Operation Manager" if node in ["Task Executor", "Data Analyst", "Schedule Manager"] else \
+                         "Finance Manager" if node in ["Budget Analyst", "Account Manager", "Tax Consultant"] else \
+                         "Support Manager"
+                diagram.edge(parent, node)
+            elif tier == "Tier 3":
+                diagram.edge("Super Agent Team", node)
 
     return diagram
 
-# Streamlit app layout
-st.set_page_config(page_title="Super Agent Team", page_icon=":star:", layout="wide")
-st.title("Super Agent Team Structure")
-st.write("A detailed, full-screen hierarchical diagram of the Super Agent Team, including managers, sub-agents, and AI integrations.")
+# Streamlit layout
+st.set_page_config(page_title="Scrollable Pit Diagram", layout="wide")
+st.title("Scrollable Super Agent Team Pit Diagram")
+st.write("A detailed hierarchical pit diagram of the Super Agent Team with scrolling enabled.")
 
-# Render the full-screen diagram
-diagram = create_fullscreen_diagram()
-st.graphviz_chart(diagram.source, use_container_width=True)
+# Generate the diagram
+diagram = create_long_pit_diagram()
+diagram.render("pit_diagram", format="svg", cleanup=True)
+
+# Embed the diagram in an iframe
+html_code = """
+    <iframe src="pit_diagram.svg" width="100%" height="800px" style="border:none; overflow:auto;"></iframe>
+"""
+st.markdown(html_code, unsafe_allow_html=True)
+
 
