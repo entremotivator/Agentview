@@ -40,9 +40,9 @@ def create_pit_diagram():
             diagram.edge(manager, agent)
 
     # Tier 3: AI Agents (connected to Support Manager)
-    ai_agents = ["AI Agent 1", "AI Agent 2", "AI Agent 3", "AI Agent 4", 
+    ai_agents = ["AI Agent 1", "AI Agent 2", "AI Agent 3", "AI Agent 4",
                  "AI Agent 5", "AI Agent 6", "AI Agent 7"]
-    
+
     for ai_agent in ai_agents:
         diagram.node(ai_agent, ai_agent, shape="ellipse", style="filled", fillcolor="lightgreen")
         diagram.edge("Support Manager", ai_agent)
@@ -63,24 +63,21 @@ This interactive chart visualizes a hierarchical structure of a team with multip
 - **Tier 3:** AI agents assisting the support team.
 """)
 
-# Generate and render the diagram
+# Generate the diagram and render it as an SVG string
 diagram = create_pit_diagram()
-diagram.render("super_agent_team_diagram", format="svg", cleanup=True)
+svg_content = diagram.pipe(format='svg').decode('utf-8')  # Generate SVG content in memory
 
-# Embed the full chart in an iframe for better visualization
-html_code = """
-<iframe src="super_agent_team_diagram.svg" width="100%" height="1200px" style="border:none; overflow:auto;"></iframe>
-"""
-st.markdown(html_code, unsafe_allow_html=True)
+# Embed the SVG directly into Streamlit
+st.markdown(f'<div style="overflow:auto; border:1px solid black;">{svg_content}</div>', unsafe_allow_html=True)
 
 # Optional: Add a download button for the SVG file
-with open("super_agent_team_diagram.svg", "rb") as file:
-    st.download_button(
-        label="📥 Download Diagram (SVG)",
-        data=file,
-        file_name="super_agent_team_diagram.svg",
-        mime="image/svg+xml"
-    )
+st.download_button(
+    label="📥 Download Diagram (SVG)",
+    data=svg_content,
+    file_name="super_agent_team_diagram.svg",
+    mime="image/svg+xml"
+)
+
 
 
 
