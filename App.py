@@ -20,8 +20,6 @@ agents = [
 # Function to create a NetworkX graph
 def create_networkx_graph():
     G = nx.DiGraph()
-    
-    # Add the original top-level managers
     G.add_edges_from([
         ("Super Agent Team", "Operation Manager"),
         ("Super Agent Team", "Finance Manager"),
@@ -33,23 +31,6 @@ def create_networkx_graph():
         ("Support Manager", "Customer Liaison"),
         ("Support Manager", "Support Specialist")
     ])
-
-    # Add new business-related managers
-    new_managers = {
-        "HR Manager": ["HR Specialist", "Recruitment Specialist", "Training Coordinator", "Payroll Administrator", "Employee Relations Manager"],
-        "IT Manager": ["Network Administrator", "Security Specialist", "Help Desk Support", "System Analyst", "Database Administrator"],
-        "Sales Manager": ["Regional Sales Manager", "Sales Trainer", "Account Executive", "Sales Analyst", "Customer Success Manager"],
-        "Marketing Manager": ["SEO Specialist", "Social Media Manager", "Content Creator", "Advertising Manager", "Brand Manager"],
-        "Product Manager": ["Product Designer", "Product Researcher", "Product Strategist", "Product Developer", "Product Analyst"],
-        "Operations Manager": ["Logistics Coordinator", "Supply Chain Manager", "Process Optimization Specialist", "Quality Control Manager", "Operations Analyst"]
-    }
-    
-    # Add the new managers and their sub-managers to the graph
-    for manager, sub_managers in new_managers.items():
-        G.add_edge("Super Agent Team", manager)
-        for sub_manager in sub_managers:
-            G.add_edge(manager, sub_manager)
-
     return G
 
 # Function to render a Graphviz diagram
@@ -60,38 +41,17 @@ def create_graphviz_diagram():
     # Add main node
     diagram.node("Super Agent Team", "Super Agent Team", shape="rectangle", style="filled", fillcolor="lightblue")
 
-    # Add original managers and their responsibilities
+    # Add managers and their responsibilities
     managers = {
         "Operation Manager": "Responsibilities:\n- Oversee daily operations\n- Coordinate with all departments\n- Task execution and delivery",
         "Finance Manager": "Responsibilities:\n- Budget allocation and analysis\n- Financial planning\n- Reporting and forecasting",
-        "Support Manager": "Responsibilities:\n- Customer support and satisfaction\n- Troubleshooting and resolving issues\n- Managing feedback",
-        "HR Manager": "Responsibilities:\n- Manage recruitment\n- Oversee employee relations\n- Handle payroll and benefits",
-        "IT Manager": "Responsibilities:\n- Oversee IT infrastructure\n- Manage network security\n- Support system troubleshooting",
-        "Sales Manager": "Responsibilities:\n- Drive sales strategies\n- Train sales team\n- Manage client relationships",
-        "Marketing Manager": "Responsibilities:\n- Develop marketing strategies\n- Manage brand presence\n- Oversee advertising campaigns",
-        "Product Manager": "Responsibilities:\n- Oversee product development\n- Manage product lifecycle\n- Lead product strategy",
-        "Operations Manager": "Responsibilities:\n- Manage operations efficiency\n- Oversee logistics\n- Streamline processes"
+        "Support Manager": "Responsibilities:\n- Customer support and satisfaction\n- Troubleshooting and resolving issues\n- Managing feedback"
     }
 
     for manager, details in managers.items():
         diagram.node(manager, f"{manager}\n\n{details}", shape="rectangle", style="filled", fillcolor="lightgrey")
         diagram.edge("Super Agent Team", manager)
 
-    # Add agents and sub-managers under their respective managers
-    sub_managers = {
-        "HR Manager": ["HR Specialist", "Recruitment Specialist", "Training Coordinator", "Payroll Administrator", "Employee Relations Manager"],
-        "IT Manager": ["Network Administrator", "Security Specialist", "Help Desk Support", "System Analyst", "Database Administrator"],
-        "Sales Manager": ["Regional Sales Manager", "Sales Trainer", "Account Executive", "Sales Analyst", "Customer Success Manager"],
-        "Marketing Manager": ["SEO Specialist", "Social Media Manager", "Content Creator", "Advertising Manager", "Brand Manager"],
-        "Product Manager": ["Product Designer", "Product Researcher", "Product Strategist", "Product Developer", "Product Analyst"],
-        "Operations Manager": ["Logistics Coordinator", "Supply Chain Manager", "Process Optimization Specialist", "Quality Control Manager", "Operations Analyst"]
-    }
-
-    for manager, sub_list in sub_managers.items():
-        for sub_manager in sub_list:
-            diagram.node(sub_manager, f"{sub_manager}", shape="ellipse", style="filled", fillcolor="lightyellow")
-            diagram.edge(manager, sub_manager)
-    
     # Add agents under their managers
     for agent in agents:
         task_details = "\n".join(agent["tasks"])
@@ -176,24 +136,78 @@ if vis_type == "NetworkX Graph":
 elif vis_type == "Graphviz Diagram":
     st.subheader("Graphviz Hierarchical Diagram")
     diagram = create_graphviz_diagram()
-    st.image(diagram.render(filename='/tmp/graphviz_output', format='png'), use_column_width=True)
+    
+    # Create the diagram container with id="content"
+    st.markdown('<div id="content">', unsafe_allow_html=True)
+    st.graphviz_chart(diagram.source)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Show the diagram in fullscreen
     components.html(fullscreen_button, height=100)
 
-# Add New Agent
-st.sidebar.subheader("Add New Agent")
-new_agent_name = st.sidebar.text_input("Agent Name")
-new_agent_manager = st.sidebar.selectbox("Select Manager", ["Operation Manager", "Finance Manager", "Support Manager", 
-                                                          "HR Manager", "IT Manager", "Sales Manager", 
-                                                          "Marketing Manager", "Product Manager", "Operations Manager"])
-new_agent_tasks = st.sidebar.text_area("Tasks (comma-separated)").split(",")
-if st.sidebar.button("Add Agent"):
-    if new_agent_name and new_agent_manager and new_agent_tasks:
-        new_agent = {
-            "name": new_agent_name,
-            "manager": new_agent_manager,
-            "tasks": [task.strip() for task in new_agent_tasks]
-        }
-        agents.append(new_agent)
-        st.sidebar.success(f"New agent {new_agent_name} added under {new_agent_manager} manager.")
+# Form to add a new agent
+st.sidebar.header("Add New Agent")
+new_agent_name = st.sidebar.text_input("Enter New Agent Name")
+new_agent_manager = st.sidebar.selectbox("Select Manager", ["Operation Manager", "Finance Manager", "Support Manager"])
+new_agent_tasks = st.sidebar.text_area("Enter Tasks for New Agent (separate tasks with commas)").split(",")
+if st.sidebar.button("Add New Agent"):
+    new_agent = {
+        "name": new_agent_name,
+        "manager": new_agent_manager,
+        "tasks": [task.strip() for task in new_agent_tasks]
+    }
+    agents.append(new_agent)
+    st.sidebar.success(f"New agent {new_agent_name} added under {new_agent_manager}!")
+    st.experimental_rerun()
 
-# Export as PDF/JSON (Optional as required)
+# Customize and Display Added Agents
+st.sidebar.header("Current Agents")
+for agent in agents:
+    st.sidebar.subheader(agent["name"])
+    st.sidebar.write(f"Manager: {agent['manager']}")
+    st.sidebar.write("Tasks:")
+    for task in agent["tasks"]:
+        st.sidebar.write(f"- {task}")
+
+# Export Agents as JSON
+st.sidebar.header("Export Agents")
+json_export = st.sidebar.button("Export Agents as JSON")
+if json_export:
+    with open("agents.json", "w") as json_file:
+        json.dump(agents, json_file, indent=4)
+    st.sidebar.success("Agents exported as agents.json!")
+
+# Export Agents as PDF
+st.sidebar.header("Export Agents as PDF")
+pdf_export = st.sidebar.button("Export Agents as PDF")
+if pdf_export:
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.cell(200, 10, txt="Super Agent Team", ln=True, align="C")
+    pdf.ln(10)
+
+    for agent in agents:
+        pdf.cell(200, 10, txt=f"Agent: {agent['name']}", ln=True)
+        pdf.cell(200, 10, txt=f"Manager: {agent['manager']}", ln=True)
+        pdf.cell(200, 10, txt="Tasks:", ln=True)
+        for task in agent["tasks"]:
+            pdf.cell(200, 10, txt=f"- {task}", ln=True)
+        pdf.ln(5)
+
+    pdf.output("agents.pdf")
+    st.sidebar.success("Agents exported as agents.pdf!")
+
+# Import Agents from JSON
+st.sidebar.header("Import Agents")
+uploaded_file = st.sidebar.file_uploader("Choose a JSON file", type=["json"])
+if uploaded_file is not None:
+    try:
+        imported_agents = json.load(uploaded_file)
+        agents.extend(imported_agents)
+        st.sidebar.success("Agents imported successfully!")
+        st.experimental_rerun()
+    except json.JSONDecodeError:
+        st.sidebar.error("Failed to decode JSON file.")
