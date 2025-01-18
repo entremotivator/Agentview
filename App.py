@@ -67,6 +67,22 @@ st.write("This visualization provides a comprehensive breakdown of the Super Age
 st.sidebar.header("Choose Visualization Type")
 vis_type = st.sidebar.radio("Select a visualization type:", ("NetworkX Graph", "Graphviz Diagram"))
 
+# Fullscreen button and JavaScript code
+fullscreen_button = """
+    <button onclick="toggleFullScreen()">Toggle Fullscreen</button>
+    <script>
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+    </script>
+"""
+
 # Display the appropriate visualization
 if vis_type == "NetworkX Graph":
     st.subheader("NetworkX Graph Representation")
@@ -74,12 +90,18 @@ if vis_type == "NetworkX Graph":
     plt.figure(figsize=(12, 8))
     pos = nx.spring_layout(G)
     nx.draw(G, pos, with_labels=True, node_color="skyblue", node_size=3000, font_size=10, font_weight="bold")
+    
+    # Show the graph in fullscreen
     st.pyplot(plt)
+    st.html(fullscreen_button, height=100)
 
 elif vis_type == "Graphviz Diagram":
     st.subheader("Graphviz Hierarchical Diagram")
     diagram = create_graphviz_diagram()
     st.graphviz_chart(diagram.source)
+    
+    # Show the diagram in fullscreen
+    st.html(fullscreen_button, height=100)
 
 # Customization Features
 st.sidebar.header("Customize Your Team Structure")
