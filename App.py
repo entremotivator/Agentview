@@ -3,6 +3,19 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from graphviz import Digraph
 import streamlit.components.v1 as components
+import json
+from fpdf import FPDF
+import os
+
+# Initialize a list to store agents
+agents = [
+    {"name": "Task Executor", "manager": "Operation Manager", "tasks": ["Execute daily tasks", "Monitor KPIs", "Prepare status reports"]},
+    {"name": "Coordinator", "manager": "Operation Manager", "tasks": ["Coordinate with other departments", "Manage scheduling", "Resolve conflicts"]},
+    {"name": "Budget Analyst", "manager": "Finance Manager", "tasks": ["Analyze financial statements", "Prepare budget reports", "Forecast future financial needs"]},
+    {"name": "Account Manager", "manager": "Finance Manager", "tasks": ["Reconcile accounts", "Track expenses", "Generate financial reports"]},
+    {"name": "Customer Liaison", "manager": "Support Manager", "tasks": ["Handle customer inquiries", "Resolve complaints", "Monitor service quality"]},
+    {"name": "Support Specialist", "manager": "Support Manager", "tasks": ["Assist customers", "Update FAQs", "Provide technical support"]}
+]
 
 # Function to create a NetworkX graph
 def create_networkx_graph():
@@ -12,8 +25,11 @@ def create_networkx_graph():
         ("Super Agent Team", "Finance Manager"),
         ("Super Agent Team", "Support Manager"),
         ("Operation Manager", "Task Executor"),
+        ("Operation Manager", "Coordinator"),
         ("Finance Manager", "Budget Analyst"),
-        ("Support Manager", "Customer Liaison")
+        ("Finance Manager", "Account Manager"),
+        ("Support Manager", "Customer Liaison"),
+        ("Support Manager", "Support Specialist")
     ])
     return G
 
@@ -36,27 +52,11 @@ def create_graphviz_diagram():
         diagram.node(manager, f"{manager}\n\n{details}", shape="rectangle", style="filled", fillcolor="lightgrey")
         diagram.edge("Super Agent Team", manager)
 
-    # Add sub-agents for each manager with detailed tasks
-    sub_agents = {
-        "Operation Manager": [
-            {"name": "Task Executor", "tasks": ["Execute daily tasks", "Monitor KPIs", "Prepare status reports"]},
-            {"name": "Coordinator", "tasks": ["Coordinate with other departments", "Manage scheduling", "Resolve conflicts"]}
-        ],
-        "Finance Manager": [
-            {"name": "Budget Analyst", "tasks": ["Analyze financial statements", "Prepare budget reports", "Forecast future financial needs"]},
-            {"name": "Account Manager", "tasks": ["Reconcile accounts", "Track expenses", "Generate financial reports"]}
-        ],
-        "Support Manager": [
-            {"name": "Customer Liaison", "tasks": ["Handle customer inquiries", "Resolve complaints", "Monitor service quality"]},
-            {"name": "Support Specialist", "tasks": ["Assist customers", "Update FAQs", "Provide technical support"]}
-        ]
-    }
-
-    for manager, agents in sub_agents.items():
-        for agent in agents:
-            task_details = "\n".join(agent["tasks"])
-            diagram.node(agent["name"], f"{agent['name']}\n\n{task_details}", shape="ellipse", style="filled", fillcolor="lightyellow")
-            diagram.edge(manager, agent["name"])
+    # Add agents under their managers
+    for agent in agents:
+        task_details = "\n".join(agent["tasks"])
+        diagram.node(agent["name"], f"{agent['name']}\n\n{task_details}", shape="ellipse", style="filled", fillcolor="lightyellow")
+        diagram.edge(agent["manager"], agent["name"])
 
     return diagram
 
@@ -145,19 +145,69 @@ elif vis_type == "Graphviz Diagram":
     # Show the diagram in fullscreen
     components.html(fullscreen_button, height=100)
 
-# Customization Features
-st.sidebar.header("Customize Your Team Structure")
-if st.sidebar.checkbox("Add New Team Member"):
-    new_team_member = st.sidebar.text_input("Enter Team Member Name")
-    new_responsibilities = st.sidebar.text_area("Enter Responsibilities")
-    if st.sidebar.button("Add Member"):
-        st.write(f"Added Team Member: {new_team_member}")
-        st.write(f"Responsibilities:\n{new_responsibilities}")
+# Form to add a new agent
+st.sidebar.header("Add New Agent")
+new_agent_name = st.sidebar.text_input("Enter New Agent Name")
+new_agent_manager = st.sidebar.selectbox("Select Manager", ["Operation Manager", "Finance Manager", "Support Manager"])
+new_agent_tasks = st.sidebar.text_area("Enter Tasks for New Agent (separate tasks with commas)").split(",")
+if st.sidebar.button("Add New Agent"):
+    new_agent = {
+        "name": new_agent_name,
+        "manager": new_agent_manager,
+        "tasks": [task.strip() for task in new_agent_tasks]
+    }
+    agents.append(new_agent)
+    st.sidebar.success(f"New agent {new_agent_name} added under {new_agent_manager}!")
+    st.experimental_rerun()
 
-if st.sidebar.checkbox("Add New Sub-Agent"):
-    manager_name = st.sidebar.selectbox("Select Manager", ["Operation Manager", "Finance Manager", "Support Manager"])
-    new_sub_agent_name = st.sidebar.text_input("Enter Sub-Agent Name")
-    new_sub_agent_tasks = st.sidebar.text_area("Enter Sub-Agent Tasks (separate tasks with commas)").split(",")
-    if st.sidebar.button("Add Sub-Agent"):
-        st.write(f"Added Sub-Agent under {manager_name}: {new_sub_agent_name}")
-        st.write(f"Tasks:\n" + "\n".join([task.strip() for task in new_sub_agent_tasks]))
+# Customize and Display Added Agents
+st.sidebar.header("Current Agents")
+for agent in agents:
+    st.sidebar.subheader(agent["name"])
+    st.sidebar.write(f"Manager: {agent['manager']}")
+    st.sidebar.write("Tasks:")
+    for task in agent["tasks"]:
+        st.sidebar.write(f"- {task}")
+
+# Export Agents as JSON
+st.sidebar.header("Export Agents")
+json_export = st.sidebar.button("Export Agents as JSON")
+if json_export:
+    with open("agents.json", "w") as json_file:
+        json.dump(agents, json_file, indent=4)
+    st.sidebar.success("Agents exported as agents.json!")
+
+# Export Agents as PDF
+st.sidebar.header("Export Agents as PDF")
+pdf_export = st.sidebar.button("Export Agents as PDF")
+if pdf_export:
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.cell(200, 10, txt="Super Agent Team", ln=True, align="C")
+    pdf.ln(10)
+
+    for agent in agents:
+        pdf.cell(200, 10, txt=f"Agent: {agent['name']}", ln=True)
+        pdf.cell(200, 10, txt=f"Manager: {agent['manager']}", ln=True)
+        pdf.cell(200, 10, txt="Tasks:", ln=True)
+        for task in agent["tasks"]:
+            pdf.cell(200, 10, txt=f"- {task}", ln=True)
+        pdf.ln(5)
+
+    pdf.output("agents.pdf")
+    st.sidebar.success("Agents exported as agents.pdf!")
+
+# Import Agents from JSON
+st.sidebar.header("Import Agents")
+uploaded_file = st.sidebar.file_uploader("Choose a JSON file", type=["json"])
+if uploaded_file is not None:
+    try:
+        imported_agents = json.load(uploaded_file)
+        agents.extend(imported_agents)
+        st.sidebar.success("Agents imported successfully!")
+        st.experimental_rerun()
+    except json.JSONDecodeError:
+        st.sidebar.error("Failed to decode JSON file.")
