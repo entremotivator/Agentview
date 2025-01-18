@@ -178,7 +178,7 @@ elif vis_type == "Graphviz Diagram":
     diagram = create_graphviz_diagram()
     st.image(diagram.render(filename='/tmp/graphviz_output', format='png'), use_column_width=True)
     components.html(fullscreen_button, height=100)
-    
+
 # Add New Agent
 st.sidebar.subheader("Add New Agent")
 new_agent_name = st.sidebar.text_input("Agent Name")
