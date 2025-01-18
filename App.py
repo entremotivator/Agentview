@@ -1,83 +1,102 @@
 import streamlit as st
 from graphviz import Digraph
 
-# Function to create the hierarchical diagram
-def create_pit_diagram():
-    # Initialize the diagram
-    diagram = Digraph("Super Agent Team", format="svg")
-    diagram.attr(rankdir="LR", size="50,10", dpi="300", style="filled", bgcolor="white")  # Horizontal layout (LR)
+# Set page layout to wide
+st.set_page_config(page_title="Super Agent Team Structure", layout="wide")
 
-    # Add the main node (Super Agent Team)
-    diagram.node(
-        "Super Agent Team",
-        "Super Agent Team",
-        shape="rectangle",
-        style="filled",
-        fillcolor="deepskyblue",
-        fontcolor="white",
-        fontsize="20"
-    )
-
-    # Tier 1: Managers
-    managers = {
-        "Operation Manager": "lightgrey",
-        "Finance Manager": "lightgrey",
-        "Support Manager": "lightgrey"
+# Custom CSS for fullscreen effect
+st.markdown(
+    """
+    <style>
+    .main .block-container {
+        padding: 0rem;
+        margin: 0rem;
+        max-width: 100%;
     }
-    for manager, color in managers.items():
-        diagram.node(manager, manager, shape="ellipse", style="filled", fillcolor=color)
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+def create_team_diagram():
+    # Initialize the diagram
+    diagram = Digraph("Super Agent Team", format="png")
+    diagram.attr(rankdir="TB", size="15", style="filled", bgcolor="white")
+
+    # Add the main header
+    diagram.node("Super Agent Team", "Super Agent Team", shape="rectangle", style="filled", fillcolor="lightblue")
+
+    # Add top-level agents
+    managers = {
+        "Operation Manager": "Responsibilities:\n- Execution\n- Communication\n- Coordination with Team",
+        "Finance Manager": "Responsibilities:\n- Budgeting\n- Analysis\n- Financial Reports",
+        "Support Manager": "Responsibilities:\n- Customer Support\n- Troubleshooting\n- Communication"
+    }
+
+    for manager, details in managers.items():
+        diagram.node(manager, f"{manager}\n\n{details}", shape="rectangle", style="filled", fillcolor="lightgrey")
         diagram.edge("Super Agent Team", manager)
 
-    # Tier 2: Sub-agents under each manager
+    # Add sub-agents with responsibilities and tasks
     sub_agents = {
-        "Operation Manager": ["Task Executor", "Data Analyst", "Schedule Manager"],
-        "Finance Manager": ["Budget Analyst", "Account Manager", "Tax Consultant"],
-        "Support Manager": ["Customer Liaison", "Help Desk Agent", "Feedback Specialist"]
+        "Operation Manager": [
+            {"name": "Subagent 1", "tasks": ["Task 1: Create Reports", "Task 2: Analyze Data"]},
+            {"name": "Subagent 2", "tasks": ["Task 1: Monitor KPIs", "Task 2: Optimize Operations"]},
+            {"name": "Subagent 3", "tasks": ["Task 1: Schedule Meetings", "Task 2: Update SOPs"]}
+        ],
+        "Finance Manager": [
+            {"name": "Subagent 4", "tasks": ["Task 1: Reconcile Accounts", "Task 2: Budget Forecast"]},
+            {"name": "Subagent 5", "tasks": ["Task 1: Generate Invoices", "Task 2: Financial Analysis"]}
+        ],
+        "Support Manager": [
+            {"name": "Subagent 6", "tasks": ["Task 1: Resolve Tickets", "Task 2: Customer Feedback"]},
+            {"name": "Subagent 7", "tasks": ["Task 1: Escalate Issues", "Task 2: Manage FAQs"]}
+        ]
     }
+
     for manager, agents in sub_agents.items():
         for agent in agents:
-            diagram.node(agent, agent, shape="ellipse", style="filled", fillcolor="lightyellow")
-            diagram.edge(manager, agent)
+            task_details = "\n".join(agent["tasks"])
+            diagram.node(agent["name"], f"{agent['name']}\n\n{task_details}", shape="ellipse", style="filled", fillcolor="lightyellow")
+            diagram.edge(manager, agent["name"])
 
-    # Tier 3: AI Agents (connected to Support Manager)
-    ai_agents = ["AI Agent 1", "AI Agent 2", "AI Agent 3", "AI Agent 4",
-                 "AI Agent 5", "AI Agent 6", "AI Agent 7"]
+    # Add AI agents
+    ai_agents = [
+        {"name": "AI Agent 1", "description": "Handles NLP tasks, sentiment analysis, and text summarization."},
+        {"name": "AI Agent 2", "description": "Manages predictive analytics and decision-making algorithms."},
+        {"name": "AI Agent 3", "description": "Specializes in computer vision and image processing tasks."}
+    ]
 
     for ai_agent in ai_agents:
-        diagram.node(ai_agent, ai_agent, shape="ellipse", style="filled", fillcolor="lightgreen")
-        diagram.edge("Support Manager", ai_agent)
-
-    # Additional styling examples (optional)
-    diagram.attr(label="Super Agent Team Hierarchy Diagram\n\nGenerated with Streamlit & Graphviz")
-    diagram.attr(fontsize="14")
+        diagram.node(ai_agent["name"], f"{ai_agent['name']}\n\n{ai_agent['description']}", shape="parallelogram", style="filled", fillcolor="lightgreen")
+        diagram.edge("Super Agent Team", ai_agent["name"])
 
     return diagram
 
 # Streamlit app layout
-st.set_page_config(page_title="Super Agent Team Chart", layout="wide")
-st.title("📊 Super Agent Team Hierarchy Diagram")
-st.write("""
-This interactive chart visualizes a hierarchical structure of a team with multiple tiers:
-- **Tier 1:** Managers overseeing operations, finance, and support.
-- **Tier 2:** Sub-agents reporting to respective managers.
-- **Tier 3:** AI agents assisting the support team.
-""")
+st.title("Super Agent Team Structure")
+st.write("This is a detailed hierarchical view of the Super Agent Team with responsibilities, tasks, and AI integrations.")
 
-# Generate the diagram and render it as an SVG string
-diagram = create_pit_diagram()
-svg_content = diagram.pipe(format='svg').decode('utf-8')  # Generate SVG content in memory
+# Display the diagram
+st.graphviz_chart(create_team_diagram().source)
 
-# Embed the SVG directly into Streamlit
-st.markdown(f'<div style="overflow:auto; border:1px solid black;">{svg_content}</div>', unsafe_allow_html=True)
+# Sidebar interactivity for enhancements
+st.sidebar.header("Customize Diagram")
+st.sidebar.write("Use these options to customize your team structure.")
+add_team = st.sidebar.checkbox("Add New Team Node")
+add_ai = st.sidebar.checkbox("Add New AI Agent Node")
 
-# Optional: Add a download button for the SVG file
-st.download_button(
-    label="📥 Download Diagram (SVG)",
-    data=svg_content,
-    file_name="super_agent_team_diagram.svg",
-    mime="image/svg+xml"
-)
+if add_team:
+    team_name = st.sidebar.text_input("Enter Team Node Name")
+    team_responsibilities = st.sidebar.text_area("Enter Team Responsibilities")
+    if st.sidebar.button("Add Team Node"):
+        st.write(f"New team node '{team_name}' with responsibilities added (not yet dynamically integrated).")
 
+if add_ai:
+    ai_name = st.sidebar.text_input("Enter AI Agent Name")
+    ai_description = st.sidebar.text_area("Enter AI Agent Description")
+    if st.sidebar.button("Add AI Agent"):
+        st.write(f"New AI agent '{ai_name}' added with description (not yet dynamically integrated).")
 
 
 
