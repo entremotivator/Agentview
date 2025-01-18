@@ -91,11 +91,26 @@ fullscreen_button = """
     <button class="fullscreen-btn" onclick="toggleFullScreen()">Toggle Fullscreen</button>
     <script>
     function toggleFullScreen() {
+        var elem = document.getElementById("content");
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // IE/Edge
+                elem.msRequestFullscreen();
+            }
         } else {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
             }
         }
     }
@@ -110,8 +125,10 @@ if vis_type == "NetworkX Graph":
     pos = nx.spring_layout(G)
     nx.draw(G, pos, with_labels=True, node_color="skyblue", node_size=3000, font_size=10, font_weight="bold")
     
-    # Show the graph in fullscreen
+    # Create the graph container with id="content"
+    st.markdown('<div id="content">', unsafe_allow_html=True)
     st.pyplot(plt)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Use components.html() for fullscreen button
     components.html(fullscreen_button, height=100)
@@ -119,7 +136,11 @@ if vis_type == "NetworkX Graph":
 elif vis_type == "Graphviz Diagram":
     st.subheader("Graphviz Hierarchical Diagram")
     diagram = create_graphviz_diagram()
+    
+    # Create the diagram container with id="content"
+    st.markdown('<div id="content">', unsafe_allow_html=True)
     st.graphviz_chart(diagram.source)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Show the diagram in fullscreen
     components.html(fullscreen_button, height=100)
