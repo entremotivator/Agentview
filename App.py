@@ -1,13 +1,13 @@
 import streamlit as st
 from graphviz import Digraph
 
-def create_team_diagram():
-    # Initialize the diagram
+def create_fullscreen_diagram():
+    # Initialize the diagram with larger dimensions
     diagram = Digraph("Super Agent Team", format="png")
-    diagram.attr(rankdir="TB", size="15", style="filled", bgcolor="white")
+    diagram.attr(rankdir="LR", size="25,15", dpi="200", style="filled", bgcolor="white")
 
     # Add the main header
-    diagram.node("Super Agent Team", "Super Agent Team", shape="rectangle", style="filled", fillcolor="deepskyblue")
+    diagram.node("Super Agent Team", "Super Agent Team", shape="rectangle", style="filled", fillcolor="deepskyblue", fontcolor="white")
 
     # Add top-level managers
     managers = {
@@ -63,27 +63,11 @@ def create_team_diagram():
     return diagram
 
 # Streamlit app layout
-st.set_page_config(page_title="Super Agent Team", page_icon=":gear:", layout="wide")
+st.set_page_config(page_title="Super Agent Team", page_icon=":star:", layout="wide")
 st.title("Super Agent Team Structure")
-st.write("Explore the detailed hierarchical structure of the Super Agent Team, including managers, their responsibilities, team members, and AI integrations.")
+st.write("A detailed, full-screen hierarchical diagram of the Super Agent Team, including managers, sub-agents, and AI integrations.")
 
-# Display the diagram in full screen
-diagram = create_team_diagram()
+# Render the full-screen diagram
+diagram = create_fullscreen_diagram()
 st.graphviz_chart(diagram.source, use_container_width=True)
 
-# Sidebar interactivity
-st.sidebar.header("Customize Diagram")
-add_team = st.sidebar.checkbox("Add New Team Node")
-add_ai = st.sidebar.checkbox("Add New AI Agent Node")
-
-if add_team:
-    new_team_name = st.sidebar.text_input("Enter Team Node Name")
-    new_team_details = st.sidebar.text_area("Enter Team Responsibilities")
-    if st.sidebar.button("Add Team Node"):
-        st.write(f"New team '{new_team_name}' added with responsibilities: {new_team_details}")
-
-if add_ai:
-    new_ai_name = st.sidebar.text_input("Enter AI Agent Name")
-    new_ai_description = st.sidebar.text_area("Enter AI Agent Description")
-    if st.sidebar.button("Add AI Agent"):
-        st.write(f"New AI Agent '{new_ai_name}' added with description: {new_ai_description}")
