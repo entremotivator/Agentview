@@ -70,7 +70,25 @@ vis_type = st.sidebar.radio("Select a visualization type:", ("NetworkX Graph", "
 
 # Fullscreen button and JavaScript code
 fullscreen_button = """
-    <button onclick="toggleFullScreen()">Toggle Fullscreen</button>
+    <style>
+        .fullscreen-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <button class="fullscreen-btn" onclick="toggleFullScreen()">Toggle Fullscreen</button>
     <script>
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
