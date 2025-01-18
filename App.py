@@ -1,51 +1,86 @@
 import streamlit as st
+from graphviz import Digraph
 
-# Extended Mermaid.js diagram
-diagram_code = """
-%%{init: {'theme': 'default', 'themeVariables': {'primaryColor': '#1f77b4', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#e3e3e3'}}}%%
-graph TB
-    A[Super Agent Team]:::main --> B[Operation Manager]:::manager
-    A --> C[Finance Manager]:::manager
-    A --> D[Support Manager]:::manager
-    
-    B --> B1[Task Executor]:::employee
-    B --> B2[Data Analyst]:::employee
-    B --> B3[Schedule Manager]:::employee
-    B --> B4[AI Agent 1 - Operational Support]:::ai
-    B --> B5[AI Agent 2 - Data Analysis]:::ai
-    
-    C --> C1[Budget Analyst]:::employee
-    C --> C2[Account Manager]:::employee
-    C --> C3[Tax Consultant]:::employee
-    C --> C4[AI Agent 3 - Financial Insights]:::ai
-    C --> C5[AI Agent 4 - Tax Compliance]:::ai
-    
-    D --> D1[Customer Liaison]:::employee
-    D --> D2[Help Desk Agent]:::employee
-    D --> D3[Feedback Specialist]:::employee
-    D --> D4[AI Agent 5 - Customer Relations]:::ai
-    D --> D5[AI Agent 6 - Feedback Analysis]:::ai
+# Function to create the hierarchical diagram
+def create_pit_diagram():
+    # Initialize the diagram
+    diagram = Digraph("Super Agent Team", format="svg")
+    diagram.attr(rankdir="LR", size="50,10", dpi="300", style="filled", bgcolor="white")  # Horizontal layout (LR)
 
-    classDef main fill:#1f77b4,stroke:#333,stroke-width:2px,font-size:18px,color:#ffffff;
-    classDef manager fill:#ffcc00,stroke:#333,stroke-width:2px,font-size:16px,color:#333;
-    classDef employee fill:#66c2a5,stroke:#333,stroke-width:1px,font-size:14px,color:#333;
-    classDef ai fill:#a6d854,stroke:#333,stroke-width:1px,font-size:14px,color:#333;
-"""
+    # Add the main node (Super Agent Team)
+    diagram.node(
+        "Super Agent Team",
+        "Super Agent Team",
+        shape="rectangle",
+        style="filled",
+        fillcolor="deepskyblue",
+        fontcolor="white",
+        fontsize="20"
+    )
 
-# Streamlit App
+    # Tier 1: Managers
+    managers = {
+        "Operation Manager": "lightgrey",
+        "Finance Manager": "lightgrey",
+        "Support Manager": "lightgrey"
+    }
+    for manager, color in managers.items():
+        diagram.node(manager, manager, shape="ellipse", style="filled", fillcolor=color)
+        diagram.edge("Super Agent Team", manager)
+
+    # Tier 2: Sub-agents under each manager
+    sub_agents = {
+        "Operation Manager": ["Task Executor", "Data Analyst", "Schedule Manager"],
+        "Finance Manager": ["Budget Analyst", "Account Manager", "Tax Consultant"],
+        "Support Manager": ["Customer Liaison", "Help Desk Agent", "Feedback Specialist"]
+    }
+    for manager, agents in sub_agents.items():
+        for agent in agents:
+            diagram.node(agent, agent, shape="ellipse", style="filled", fillcolor="lightyellow")
+            diagram.edge(manager, agent)
+
+    # Tier 3: AI Agents (connected to Support Manager)
+    ai_agents = ["AI Agent 1", "AI Agent 2", "AI Agent 3", "AI Agent 4", 
+                 "AI Agent 5", "AI Agent 6", "AI Agent 7"]
+    
+    for ai_agent in ai_agents:
+        diagram.node(ai_agent, ai_agent, shape="ellipse", style="filled", fillcolor="lightgreen")
+        diagram.edge("Support Manager", ai_agent)
+
+    # Additional styling examples (optional)
+    diagram.attr(label="Super Agent Team Hierarchy Diagram\n\nGenerated with Streamlit & Graphviz")
+    diagram.attr(fontsize="14")
+
+    return diagram
+
+# Streamlit app layout
 st.set_page_config(page_title="Super Agent Team Chart", layout="wide")
-st.title("Super Agent Team Chart")
-st.write("A detailed and extended team hierarchy with AI agents displayed using Mermaid.js.")
+st.title("📊 Super Agent Team Hierarchy Diagram")
+st.write("""
+This interactive chart visualizes a hierarchical structure of a team with multiple tiers:
+- **Tier 1:** Managers overseeing operations, finance, and support.
+- **Tier 2:** Sub-agents reporting to respective managers.
+- **Tier 3:** AI agents assisting the support team.
+""")
 
-# Display the diagram
-st.markdown(
-    f"""
-    ```mermaid
-    {diagram_code}
-    ```
-    """,
-    unsafe_allow_html=True,
-)
+# Generate and render the diagram
+diagram = create_pit_diagram()
+diagram.render("super_agent_team_diagram", format="svg", cleanup=True)
+
+# Embed the full chart in an iframe for better visualization
+html_code = """
+<iframe src="super_agent_team_diagram.svg" width="100%" height="1200px" style="border:none; overflow:auto;"></iframe>
+"""
+st.markdown(html_code, unsafe_allow_html=True)
+
+# Optional: Add a download button for the SVG file
+with open("super_agent_team_diagram.svg", "rb") as file:
+    st.download_button(
+        label="📥 Download Diagram (SVG)",
+        data=file,
+        file_name="super_agent_team_diagram.svg",
+        mime="image/svg+xml"
+    )
 
 
 
